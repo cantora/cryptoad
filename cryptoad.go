@@ -303,7 +303,7 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) != 2 {
-		log(0, "two positional arguments expected\n")
+		log(0, "two positional arguments expected. got %s\n", flag.Args())
 		flag.Usage()
 		os.Exit(1)
 	}
