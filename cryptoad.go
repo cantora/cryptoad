@@ -186,6 +186,35 @@ func available_oses() (result []string, err error) {
 	return platform_info(f)
 }
 
+func get_passwd() (pass []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New("failed to get password")
+		}
+	}()
+
+	i := 0
+	for {
+		fmt.Printf("enter password: ")
+		pass = gopass.GetPasswd()
+		fmt.Printf("re-enter password: ")
+		confirm := gopass.GetPasswd()
+		if bytes.Equal(pass, confirm) {
+			break
+		}
+
+		if i < 2 {
+			fmt.Printf("passwords did not match. try again\n")
+		} else {
+			err = errors.New("too many password failures")
+			return
+		}
+		i += 1
+	}
+
+	return
+}
+
 func run(verbosity int, input, output, opsys, arch, pass string) {
 	var pw []byte
 
@@ -207,27 +236,17 @@ func run(verbosity int, input, output, opsys, arch, pass string) {
 	}
 
 	if len(pass) < 1 {
-		i := 0
-		for {
-			fmt.Printf("enter password: ")
-			pw = gopass.GetPasswd()
-			fmt.Printf("re-enter password: ")
-			confirm := gopass.GetPasswd()
-			if bytes.Equal(pw, confirm) {
-				break
-			}
-
-			if i < 2 {
-				fmt.Printf("passwords did not match. try again\n")
-			} else {
-				err_exit("too many password failures")
-			}
-			i += 1
+		pw, err = get_passwd()
+		if err != nil {
+			err_exit(err.Error())
 		}
 	} else {
 		pw = []byte(pass)
 	}
-	if len(pw) < 10 {
+
+	if len(pw) < 8 {
+		err_exit("password is really too short. you can do better than that.")
+	} else if len(pw) < 10 {
 		log(0, "warning: password is weak\n")
 	}
 

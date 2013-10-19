@@ -21,11 +21,8 @@ clean:
 define test-template
 .PHONY: $(1)
 $(1): test/$(1).sh cryptoad
-	@echo '######################################################################'; done
-	@echo '############# TEST $(1) '
-	@echo '######################################################################'; done
-	@test/$(1).sh || { echo "test failed"; false; }
-	@echo
+	@test/$(1).sh > test/$(1).log 2>&1 || { echo "[-] $(1) failed:"; cat test/$(1).log; false; }
+	@echo '[+] $(1) passed '
 endef
 $(foreach test, $(TESTS), $(eval $(call test-template,$(test)) ) )
 
