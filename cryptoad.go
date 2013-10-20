@@ -28,6 +28,7 @@ func go_bindata_cmd(tmpdir, filename string) []string {
 }
 
 func run_cmd(cmd *exec.Cmd) (output []byte, err error) {
+	log(2, "run command: %s\n", cmd)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
 		format := "failed to run command '%s'. error = %s; output = '%s'"
@@ -67,7 +68,9 @@ func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) er
 	os.Chdir(dir)
 
 	for _, el := range files {
-		err := ioutil.WriteFile(filepath.Join(dir, el.name), el.data, 0440)
+		fp := filepath.Join(dir, el.name)
+		log(2, "write file %s\n", fp)
+		err := ioutil.WriteFile(fp, el.data, 0440)
 		if err != nil {
 			return err
 		}
@@ -86,6 +89,7 @@ func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) er
 		return err
 	}
 	
+	log(2, "clean up temporary files\n")
 	for _, file := range bindata_assets {
 		os.Remove(file)
 		os.Remove(file + ".go")
