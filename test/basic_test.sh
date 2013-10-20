@@ -7,7 +7,7 @@ im catbug! whats your name?
 DOC
 
 pass='spooky action at a distance'
-ct=./cryptoad
+ct='./cryptoad -v 6'
 
 $ct -pass "$pass" $dir/input $dir/toadbug
 pushd $dir

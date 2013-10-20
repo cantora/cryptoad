@@ -12,6 +12,15 @@ import (
 	"github.com/cryptobox/gocryptobox/strongbox"
 )
 
+func asset(name string) []byte {
+	value, err := get_asset(name)
+	if err != nil {
+		err_exit("failed to extract '%s' asset: %s", name, err)
+	}
+
+	return value
+}
+
 func main() {
 	const pass_desc        = "the password with which to decrypt. " +
 	                         "if not specified password will be prompted"
@@ -21,7 +30,7 @@ func main() {
 	var pass string
 	var pw []byte
 
-	default_name := string(name())
+	default_name := string(asset("name"))
 
 	flag.StringVar(&out, "out", default_name, "output path")
 	flag.StringVar(&pass, "pass", "", pass_desc)
@@ -36,8 +45,8 @@ func main() {
 		pw = []byte(pass)
 	}
 
-	key := get_key(pw, salt())
-	msg, ok := strongbox.Open(box(), key)
+	key := get_key(pw, asset("salt"))
+	msg, ok := strongbox.Open(asset("box"), key)
 	if !ok {
 		err_exit("wrong password. failed to decrypt box")
 	}

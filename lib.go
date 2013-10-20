@@ -3,12 +3,14 @@ package main
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"fmt"
 	"os"
 	"crypto/rand"
 	"crypto/sha1"
 	"code.google.com/p/go.crypto/pbkdf2"
 	"github.com/cryptobox/gocryptobox/strongbox"
+	"github.com/cookieo9/resources-go/v2/resources" 
 )
 
 var verbosity = 0
@@ -59,3 +61,19 @@ func get_key(password, salt []byte) []byte {
 	return pbkdf2.Key(password, salt, PBKDF_ITERS, KLEN, sha1.New)
 }
 
+/* included here so that go understands that resources-go is
+ * a dependency (toad.go will use this function when summoned) */
+func get_asset(name string) (value []byte, err error) {
+	r, err := resources.DefaultBundle.Find(fmt.Sprintf("assets/%s", name))
+	if err != nil {
+		return
+	}
+
+	rdr, err := r.Open()
+	if err != nil {
+		return
+	}
+
+	value, err = ioutil.ReadAll(rdr)
+	return
+}

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"bytes"
 	"path/filepath"
+	"io"
 	"io/ioutil"
 	"os/exec"
 	"errors"
@@ -15,18 +16,21 @@ import (
 	"github.com/cryptobox/gocryptobox/strongbox"
 )
 
-func go_bindata_cmd(tmpdir, filename string) []string {
-	asset_path := fmt.Sprintf("%s/%s", tmpdir, filename)
-
-	return []string{
-		"-uncompressed=true",
-		"-nomemcopy=true",
-		"-prefix",
-		tmpdir,
-		"-out",
-		asset_path + ".go",
-		asset_path,		
+func append_all(src_path, dst_path string) error {
+	src, err := os.Open(src_path)
+	if err != nil {
+		return err
 	}
+	defer src.Close()
+
+	dst, err := os.OpenFile(dst_path, os.O_APPEND|os.O_WRONLY, 0660)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	return err
 }
 
 func run_cmd(cmd *exec.Cmd) (output []byte, err error) {
@@ -58,18 +62,18 @@ func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) er
 		data []byte
 	}
 	
-	files := []pair{
+	source_files := []pair{
 		{"toad.go", toad_go()},
 		{"lib.go", lib_go()},
+	}
+
+	assets := []pair{
 		{"box", box},
 		{"name", []byte(name)},
 		{"salt", salt},
 	}
-	bindata_assets := []string{"box", "name", "salt"}
 
-	os.Chdir(dir)
-
-	for _, el := range files {
+	for _, el := range source_files {
 		fp := filepath.Join(dir, el.name)
 		log(2, "write file %s\n", fp)
 		err := ioutil.WriteFile(fp, el.data, 0440)
@@ -77,37 +81,56 @@ func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) er
 			return err
 		}
 	}
-
-	for _, asset := range bindata_assets {
-		cmd_args := go_bindata_cmd(dir, asset)
-		_, err := run_cmd(exec.Command("go-bindata", cmd_args...))
+	
+	asset_dir := filepath.Join(dir, "assets")
+	if err := os.Mkdir(asset_dir, 0770); err != nil {
+		return err
+	}
+	
+	for _, el := range assets {
+		fp := filepath.Join(asset_dir, el.name)
+		log(2, "write file %s\n", fp)
+		err := ioutil.WriteFile(fp, el.data, 0440)
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err := run_cmd(go_cmd(dst, opsys, arch))
-	if err != nil {
+	os.Chdir(dir)
+
+	cmds := make([]*exec.Cmd,2)
+	cmds[0] = exec.Command("zip", "-r", "assets.zip", "assets")
+	cmds[1] = go_cmd(dst, opsys, arch)
+
+	for _, el := range cmds {
+		_, err := run_cmd(el)
+		if err != nil {
+			return err
+		}
+	}
+
+	log(2, "append zip to binary\n")
+	if err := append_all(filepath.Join(dir, "assets.zip"), dst); err != nil {
 		return err
 	}
-	
+
 	log(2, "clean up temporary files\n")
-	for _, file := range bindata_assets {
-		os.Remove(file)
-		os.Remove(file + ".go")
+	for _, file := range source_files {
+		os.Remove(file.name)
 	}
-	os.Remove("toad.go")
-	os.Remove("lib.go")
+	for _, el := range assets {
+		fp := filepath.Join(asset_dir, el.name)
+		os.Remove(fp)
+	}
+	os.Remove("assets.zip")
+	os.Remove(asset_dir)
 	os.Remove(dir)
 
 	return nil
 }
 
 func check_dependencies() error {
-	deps := []string{
-		"go",
-		"go-bindata",
-	}
+	deps := []string{"go", "zip"}
 
 	for _, el := range deps {
 		_, err := exec.LookPath(el)
@@ -226,10 +249,6 @@ func run(verbosity int, input, output, opsys, arch, pass string) {
 
 	log_level(verbosity)
 
-	if err := check_dependencies(); err != nil {
-		err_exit("command '%s' required to be in executable PATH", err)
-	}
-
 	abs_dst, err := filepath.Abs(output)
 	if err != nil {
 		err_exit("failed to get absolute file path for %s: %s", output, err)
@@ -296,6 +315,10 @@ func main() {
 	                       "  OUTPUT:          your newly summoned, self-decrypting toad friend /.0 _0}\n"
 	var pass string
 	var verbosity int
+
+	if err := check_dependencies(); err != nil {
+		err_exit("command '%s' required to be in executable PATH", err)
+	}
 
 	arches, err := available_archs()
 	if err != nil {
