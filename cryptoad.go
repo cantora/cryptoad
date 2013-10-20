@@ -19,6 +19,8 @@ func go_bindata_cmd(tmpdir, filename string) []string {
 	asset_path := fmt.Sprintf("%s/%s", tmpdir, filename)
 
 	return []string{
+		"-uncompressed=true",
+		"-nomemcopy=true",
 		"-prefix",
 		tmpdir,
 		"-out",
