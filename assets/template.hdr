@@ -1,0 +1,4 @@
+package main
+
+func TEMPLATENAME_go() []byte {
+	return []byte(`

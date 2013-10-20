@@ -6,17 +6,22 @@ all: cryptoad
 cryptoad: cryptoad.go lib.go serial-toad.go serial-lib.go
 	go build -o $@
 
-serial-lib.go: lib.go
-	go-bindata -out $@ $<
+define asset-template
+serial-$(1).go: $(2)
+	cat assets/template.hdr | sed 's/TEMPLATENAME/$(1)/' > $$@.tmp
+	cat $$< >> $$@.tmp
+	cat assets/template.ftr >> $$@.tmp
+	mv $$@.tmp $$@
+endef
 
-serial-toad.go: assets/toad.go
-	go-bindata -prefix "assets/" -out $@ $< 
+$(eval $(call asset-template,lib,lib.go))
+$(eval $(call asset-template,toad,assets/toad.go))
 
 .PHONY: clean
 clean:
 	go clean
 	rm -vf serial-*.go 
-
+	rm -vf serial-*.go.tmp
 
 define test-template
 .PHONY: $(1)
