@@ -11,18 +11,42 @@ import (
 	"io"
 	"io/ioutil"
 	"os/exec"
+	"archive/zip"
 	"errors"
 	"github.com/howeyc/gopass"
 	"github.com/cryptobox/gocryptobox/strongbox"
 )
 
-func append_all(src_path, dst_path string) error {
-	src, err := os.Open(src_path)
-	if err != nil {
-		return err
-	}
-	defer src.Close()
+type data_pair struct {
+	name string
+	data []byte
+}
 
+func asset_archive(assets []data_pair) (buf *bytes.Buffer, err error) {
+	buf = new(bytes.Buffer)
+	w := zip.NewWriter(buf)
+
+	for _, el := range assets {
+		var f io.Writer
+		f, err = w.Create(filepath.Join("assets", el.name))
+		if err != nil {
+			return
+		}
+		_, err = f.Write(el.data)
+		if err != nil {
+			return
+		}
+	}
+
+	err = w.Close()
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func append_all(src *bytes.Buffer, dst_path string) error {
 	dst, err := os.OpenFile(dst_path, os.O_APPEND|os.O_WRONLY, 0660)
 	if err != nil {
 		return err
@@ -57,17 +81,12 @@ func go_cmd(dst, opsys, arch string) *exec.Cmd {
 }
 
 func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) error {
-	type pair struct {
-		name string
-		data []byte
-	}
-	
-	source_files := []pair{
+	source_files := []data_pair{
 		{"toad.go", toad_go()},
 		{"lib.go", lib_go()},
 	}
 
-	assets := []pair{
+	assets := []data_pair{
 		{"box", box},
 		{"name", []byte(name)},
 		{"salt", salt},
@@ -82,35 +101,20 @@ func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) er
 		}
 	}
 	
-	asset_dir := filepath.Join(dir, "assets")
-	if err := os.Mkdir(asset_dir, 0770); err != nil {
-		return err
-	}
-	
-	for _, el := range assets {
-		fp := filepath.Join(asset_dir, el.name)
-		log(2, "write file %s\n", fp)
-		err := ioutil.WriteFile(fp, el.data, 0440)
-		if err != nil {
-			return err
-		}
-	}
-
 	os.Chdir(dir)
 
-	cmds := make([]*exec.Cmd,2)
-	cmds[0] = exec.Command("zip", "-r", "assets.zip", "assets")
-	cmds[1] = go_cmd(dst, opsys, arch)
+	_, err := run_cmd(go_cmd(dst, opsys, arch))
+	if err != nil {
+		return err
+	}
 
-	for _, el := range cmds {
-		_, err := run_cmd(el)
-		if err != nil {
-			return err
-		}
+	zip_buf, err := asset_archive(assets)
+	if err != nil {
+		return err
 	}
 
 	log(2, "append zip to binary\n")
-	if err := append_all(filepath.Join(dir, "assets.zip"), dst); err != nil {
+	if err := append_all(zip_buf, dst); err != nil {
 		return err
 	}
 
@@ -118,12 +122,6 @@ func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) er
 	for _, file := range source_files {
 		os.Remove(file.name)
 	}
-	for _, el := range assets {
-		fp := filepath.Join(asset_dir, el.name)
-		os.Remove(fp)
-	}
-	os.Remove("assets.zip")
-	os.Remove(asset_dir)
 	os.Remove(dir)
 
 	return nil
