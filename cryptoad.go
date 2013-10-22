@@ -128,7 +128,7 @@ func summon_toad(dst, opsys, arch, dir, name string, salt []byte, box []byte) er
 }
 
 func check_dependencies() error {
-	deps := []string{"go", "zip"}
+	deps := []string{"go"}
 
 	for _, el := range deps {
 		_, err := exec.LookPath(el)
