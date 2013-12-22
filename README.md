@@ -70,3 +70,22 @@ systems and architectures for which a user intends to target with cryptoad.
 [This](http://dave.cheney.net/2013/07/09/an-introduction-to-cross-compilation-with-go-1-1)
 tutorial details the steps required to set up a go cross compilation environment.
 
+After a proper go environment is set up, build the cryptoad binary by running:  
+`$> go build`  
+finally, you can test that cryptoad detects the cross compilation support
+in the go environment:  
+```
+$> ./cryptoad -h
+usage: cryptoad INPUT OUTPUT
+  INPUT:           the file to encrypt
+  OUTPUT:          your newly summoned, self-decrypting toad friend /.0 _0}
+  -arch="amd64":   target architecture. one of 386, amd64, arm
+  -os="linux":     target OS. one of darwin, freebsd, linux, windows
+  -pass="":        the password with which to encrypt. if not specified, you
+                   will be prompted for one. make it a good one whydontcha!?
+  -v=0:            verbosity level. higher level is more verbose
+```  
+the usage help lists `386`, `amd64` and `arm` for architectures and
+lists `darwin`, `freebsd`, `linux` and `windows` for operating systems
+because cryptoad has detected that they are available for cross 
+compilation in the go environment.
