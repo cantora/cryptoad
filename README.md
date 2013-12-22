@@ -54,9 +54,19 @@ with the encrypted file embedded within. Its recipient can then download it,
 run it, enter the password (presumably transmitted out of band by phone,
 email or text), and finally receive the original un-encrypted file.
 
-###installation
+###Installation
 WARNING: this is beta software, do not use it in production systems or trust
 it with super secret stuff.
 
-developer installation instructions coming soon.
+Due to the magic of [go](http://golang.org/) binaries, the output binary of 
+cryptoad is completely self-sufficient (no dynamic linking). This means that
+recipients of cryptoad binaries will be able to simply run them without 
+installing anything.
+
+On the other hand, cryptoad requires a golang development environment to
+actually run and generate cryptoad binaries. Specifically, the golang
+environment must support cross compilation to the various operating
+systems and architectures for which a user intends to target with cryptoad.
+[This](http://dave.cheney.net/2013/07/09/an-introduction-to-cross-compilation-with-go-1-1)
+tutorial details the steps required to set up a go cross compilation environment.
 
