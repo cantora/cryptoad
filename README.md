@@ -64,7 +64,7 @@ recipients of cryptoad binaries will be able to simply run them without
 installing anything.
 
 On the other hand, cryptoad requires a golang development environment to
-actually run and generate cryptoad binaries. Specifically, the golang
+actually generate cryptoad output binaries. Specifically, the golang
 environment must support cross compilation to the various operating
 systems and architectures for which a user intends to target with cryptoad.
 [This](http://dave.cheney.net/2013/07/09/an-introduction-to-cross-compilation-with-go-1-1)
