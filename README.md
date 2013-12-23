@@ -71,7 +71,7 @@ systems and architectures for which a user intends to target with cryptoad.
 tutorial details the steps required to set up a go cross compilation environment.
 
 After a proper go environment is set up, build the cryptoad binary by running:  
-`$> go build`  
+`go build`  
 finally, you can test that cryptoad detects the cross compilation support
 in the go environment:  
 ```
