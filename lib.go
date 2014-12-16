@@ -10,7 +10,7 @@ import (
 	"crypto/sha1"
 	"code.google.com/p/go.crypto/pbkdf2"
 	"github.com/cryptobox/gocryptobox/strongbox"
-	"github.com/cookieo9/resources-go/v2/resources" 
+	"github.com/cookieo9/resources-go/tree/v2/resources"
 )
 
 var verbosity = 0
