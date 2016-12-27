@@ -6,25 +6,7 @@ over a cloud service?? Ever get that icky feeling knowing
 that their servers will probably retain the file forever
 even after you delete it? You could encrypt it but that
 means the person to which you're sending must have the 
-necessary software/know-how to decrypt it! OHNOTHEYDONT?
-Expletives!
-
-So... try summoning a toad freind, then make to his mouth
-a file. Kuchiyose no Jutsu!
-
-<pre>
-  _____________________
- /                     \
-|  YUM! S3KR3T DATAS!  /
- \____________________/   
-                      \    ___
-                        (-)   (-)\
-          ______       / ____    o\_
- file -> @))))))) --->  \_____\     \
-                         / ---  /    |
-                      __/    __/  __/
-                       /\     /\   /\
-</pre>
+necessary software/know-how to decrypt it!
 
 Cryptoad takes any single input file, encrypts it using a
 supplied password, then packages the file into a binary
@@ -53,6 +35,13 @@ Now `toad-agent.exe` is shipped off to someone via drop box/google drive/etc
 with the encrypted file embedded within. Its recipient can then download it,
 run it, enter the password (presumably transmitted out of band by phone,
 email or text), and finally receive the original un-encrypted file.
+
+!!WARNING!! This process does nothing to ensure that the file the other
+person receives is **authenticated**. Someone could attack the person receiving
+the file by replacing it with a malicious executable. In order to authenticate
+the file, the receiver should coordinate with the sender in some way. For example,
+the sender could provide the receiver with a cryptographic checksum, and the
+receiver could authenticate the file by comparing the checksum.
 
 ###Installation
 WARNING: this is beta software, do not use it in production systems or trust
